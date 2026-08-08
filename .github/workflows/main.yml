@@ -8,14 +8,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step A: Download your repository code onto the runner machine
       - name: Checkout Code Repository
         uses: actions/checkout@v4
 
-      - name: Run Trivy Vulnerability Audit
-        uses: aquasecurity/trivy-action@v0.28.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'table'
-          exit-code: '1'
-          severity: 'CRITICAL,HIGH'
+      # Step B: Install the actual binary engine natively via Ubuntu package commands
+      - name: Install Trivy Scanner Engine
+        run: |
+          sudo apt-get update && sudo apt-get install wget apt-transport-https gnupg lsb-release -y
+          wget -qO - https://github.io | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://github.io $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update && sudo apt-get install trivy -y
+
+      # Step C: Trigger the file check natively inside the runner directory environment
+      - name: Run Native Filesystem Security Audit
+        run: |
+          trivy fs --exit-code 1 --severity CRITICAL,HIGH .
