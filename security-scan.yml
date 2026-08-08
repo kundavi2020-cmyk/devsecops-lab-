@@ -1,0 +1,24 @@
+name: DevSecOps Security Scan Pipeline
+
+# This triggers the scan automatically every single time a developer pushes code
+on: [push]
+
+jobs:
+  trivy-scan:
+    name: Execute Code Security Check
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step A: Download a fresh copy of your code inside the runner
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      # Step B: Run the Trivy scanner engine automatically 
+      - name: Run Trivy Vulnerability Audit
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1' # Fails the pipeline if vulnerabilities pop up
+          severity: 'CRITICAL,HIGH'
